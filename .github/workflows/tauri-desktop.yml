@@ -21,6 +21,7 @@ jobs:
             args: ''
 
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 60
     env:
       NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
       NPM_CONFIG_FETCH_RETRIES: 8
@@ -50,11 +51,12 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
+        timeout-minutes: 8
         run: |
           npm config delete proxy || true
           npm config delete https-proxy || true
           npm config set registry https://registry.npmjs.org/
-          npm install --no-audit --no-fund --registry=https://registry.npmjs.org/
+          npm install --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
