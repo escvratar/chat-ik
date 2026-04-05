@@ -9,6 +9,12 @@ on:
 jobs:
   frontend-build:
     runs-on: ubuntu-latest
+    env:
+      NPM_CONFIG_REGISTRY: https://registry.npmjs.org/
+      NPM_CONFIG_FETCH_RETRIES: 8
+      NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: 20000
+      NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: 120000
+      NPM_CONFIG_NETWORK_TIMEOUT: 600000
     defaults:
       run:
         working-directory: frontend
@@ -24,7 +30,11 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: |
+          npm config delete proxy || true
+          npm config delete https-proxy || true
+          npm config set registry https://registry.npmjs.org/
+          npm install --no-audit --no-fund --registry=https://registry.npmjs.org/
 
       - name: Build frontend
         env:
