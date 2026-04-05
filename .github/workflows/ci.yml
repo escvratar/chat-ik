@@ -39,7 +39,8 @@ jobs:
           npm config set registry https://registry.npmjs.org/
           npm config set progress false
           npm config set fetch-timeout 120000
-          npm install --ignore-scripts --no-package-lock --omit=optional --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
+          npm install --ignore-scripts --no-package-lock --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
+          npm install --no-save @rollup/rollup-linux-x64-gnu --registry=https://registry.npmjs.org/
 
       - name: Build frontend
         env:
