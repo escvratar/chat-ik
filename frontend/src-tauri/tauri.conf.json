@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "chat-iK",
+  "version": "0.1.0",
+  "identifier": "com.chatik.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "chat-iK Messenger",
+        "width": 1280,
+        "height": 820,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["appimage", "deb", "rpm", "msi", "nsis"],
+    "icon": [
+      "../public/logo192.png",
+      "../public/logo512.png"
+    ]
+  }
+}

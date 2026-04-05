@@ -1,0 +1,117 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: chatik_nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: chatik_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: chatik_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  backend:
+    build: ./backend
+    container_name: chatik_backend
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_NAME=${POSTGRES_DB}
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_USE_SSL=false
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - JWT_SECRET=${JWT_SECRET}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+        VITE_TURN_USERNAME: ${TURN_USERNAME}
+        VITE_TURN_PASSWORD: ${TURN_PASSWORD}
+    container_name: chatik_frontend
+    depends_on:
+      - backend
+
+  coturn:
+    image: coturn/coturn
+    container_name: chatik_coturn
+    ports:
+      - "3478:3478/tcp"
+      - "3478:3478/udp"
+      - "3479:3479/tcp"
+      - "3479:3479/udp"
+      - "49160-49200:49160-49200/tcp"
+      - "49160-49200:49160-49200/udp"
+    environment:
+      - TURN_EXTERNAL_IP=${TURN_EXTERNAL_IP:-}
+      - TURN_REALM=${TURN_REALM}
+      - TURN_USERNAME=${TURN_USERNAME}
+      - TURN_PASSWORD=${TURN_PASSWORD}
+    command: >
+      sh -ec "EXTERNAL_IP=$${TURN_EXTERNAL_IP};
+      if [ -z \"$$EXTERNAL_IP\" ] && command -v getent >/dev/null 2>&1; then
+        EXTERNAL_IP=$$(getent ahostsv4 \"$${TURN_REALM}\" | awk 'NR==1 {print $$1}');
+      fi;
+      exec turnserver
+      --listening-port=3478
+      --alt-listening-port=3479
+      --listening-ip=0.0.0.0
+      --min-port=49160
+      --max-port=49200
+      $${EXTERNAL_IP:+--external-ip=$${EXTERNAL_IP}}
+      --user=$${TURN_USERNAME}:$${TURN_PASSWORD}
+      --realm=$${TURN_REALM}
+      --lt-cred-mech
+      --fingerprint
+      --no-tls
+      --no-dtls
+      --no-multicast-peers
+      --log-file=stdout"
+
+volumes:
+  postgres_data:
+  minio_data:
