@@ -33,9 +33,11 @@ jobs:
       - name: Install dependencies
         timeout-minutes: 6
         run: |
+          npm pkg delete devDependencies.@tauri-apps/cli
           npm config delete proxy || true
           npm config delete https-proxy || true
           npm config set registry https://registry.npmjs.org/
+          npm config set progress false
           npm install --omit=optional --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
 
       - name: Build frontend
