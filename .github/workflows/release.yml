@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate release notes
+        id: notes
+        run: |
+          echo "## chat-iK $GITHUB_REF_NAME" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### Included" >> release_notes.md
+          echo "- Secure self-hosted messenger (E2EE, calls, push, admin)" >> release_notes.md
+          echo "- Automated installers for Windows / Linux / Synology" >> release_notes.md
+          echo "- Tauri native shell bootstrap (Windows / Linux / Android)" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "See README for full deployment instructions." >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: release_notes.md
+          draft: false
+          prerelease: true

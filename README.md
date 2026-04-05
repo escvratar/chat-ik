@@ -148,3 +148,28 @@ npm run tauri:android:build
 
 ## Лицензия
 Внутренний проект. Добавьте `LICENSE`, если планируется публичное использование.
+
+## CI/CD и релизы (GitHub Actions)
+
+Добавленные workflow:
+- `.github/workflows/ci.yml` — базовая проверка сборки frontend/backend
+- `.github/workflows/docker-images.yml` — сборка и push Docker-образов в GHCR
+- `.github/workflows/tauri-desktop.yml` — desktop Tauri build (Windows + Linux)
+- `.github/workflows/release.yml` — публикация GitHub Release при теге `v*`
+
+### Выпуск релиза
+```bash
+git tag v1.0.0-beta
+git push origin v1.0.0-beta
+```
+
+После push тега автоматически:
+1. создается GitHub Release,
+2. запускается сборка Docker-образов,
+3. запускается desktop Tauri build.
+
+### GitHub Variables (рекомендуется)
+Repository → Settings → Secrets and variables → Actions → Variables:
+- `VITE_VAPID_PUBLIC_KEY`
+- `VITE_TURN_USERNAME`
+- `VITE_TURN_PASSWORD`
