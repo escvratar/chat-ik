@@ -44,7 +44,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
