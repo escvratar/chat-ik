@@ -26,19 +26,20 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        timeout-minutes: 6
+        timeout-minutes: 4
         run: |
           npm pkg delete devDependencies.@tauri-apps/cli
           npm config delete proxy || true
           npm config delete https-proxy || true
           npm config set registry https://registry.npmjs.org/
           npm config set progress false
-          npm install --omit=optional --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
+          npm config set fetch-timeout 120000
+          npm install --ignore-scripts --no-package-lock --omit=optional --no-audit --no-fund --no-progress --registry=https://registry.npmjs.org/
 
       - name: Build frontend
         env:
@@ -59,7 +60,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install backend dependencies
         run: npm install
